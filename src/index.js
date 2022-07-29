@@ -20,21 +20,23 @@ const server = http.createServer(app);
 const io = SocketIO(server);
 
 io.on("connection", socket => {
+    socket.nicknameName = "anonymous"
 
     socket.onAny(event => console.log(`Socket Event: ${event}`));
 
-    socket.on("room", (roomNo, callback) => {
+    socket.on("room", (roomNo, name, callback) => {
         socket.join(roomNo);
+        socket.name = name;
         callback();
-        socket.to(roomNo).emit("welcome");
+        socket.to(roomNo).emit("join", socket.name);
     });
 
     socket.on("disconnecting", () => {
-        socket.rooms.forEach(room => socket.to(room).emit("bye"));
+        socket.rooms.forEach(room => socket.to(room).emit("quit", socket.name));
     });
 
     socket.on("chat", (roomNo, msg, callback) => {
-        socket.to(roomNo).emit("chat", msg);
+        socket.to(roomNo).emit("chat", socket.name, msg);
         callback();
     });
 

@@ -48,6 +48,7 @@ const socket = io();
 
 const enterRoom = document.querySelector("#enterRoom");
 const enterForm = enterRoom.querySelector("#enterForm");
+const nameInput = enterRoom.querySelector("#nameInput");
 const roomInput = enterForm.querySelector("#roomInput");
 
 const chatRoom = document.querySelector("#chatRoom");
@@ -72,7 +73,7 @@ const showRoom = () => {
 enterForm.addEventListener("submit", event => {
     event.preventDefault();
     roomNo = roomInput.value;
-    socket.emit("room", roomNo, showRoom);
+    socket.emit("room", roomNo, nameInput.value, showRoom);
     roomTitle.innerText = `Room ${roomNo}`;
     roomInput.value = "";
 });
@@ -91,8 +92,8 @@ const createChat = (msg) => {
     chats.appendChild(chat);
 }
 
-socket.on("welcome", () => createChat("Someone Joined!"));
+socket.on("chat", (name, msg) => createChat(`${name}: ${msg}`));
 
-socket.on("bye", () => createChat("Someone disconnecting"));
+socket.on("join", (name) => createChat(`${name} Joined!`));
 
-socket.on("chat", (msg) => createChat(`Stranger: ${msg}`));
+socket.on("quit", (name) => createChat(`${name} left.`));

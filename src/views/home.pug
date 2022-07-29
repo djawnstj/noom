@@ -20,6 +20,7 @@ html(lang="en")
         main
             div#enterRoom
                 form#enterForm
+                    input#nameInput(placeholder="nick name", required, type="text")
                     input#roomInput(placeholder="room no", required, type="text", oninput="inputNum(this)")
                     button Enter Room
             div#chatRoom
