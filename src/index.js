@@ -20,8 +20,25 @@ const server = http.createServer(app);
 const io = SocketIO(server);
 
 io.on("connection", socket => {
-    socket.on("room", msg => console.log(msg));
-})
+
+    socket.onAny(event => console.log(`Socket Event: ${event}`));
+
+    socket.on("room", (roomNo, callback) => {
+        socket.join(roomNo);
+        callback();
+        socket.to(roomNo).emit("welcome");
+    });
+
+    socket.on("disconnecting", () => {
+        socket.rooms.forEach(room => socket.to(room).emit("bye"));
+    });
+
+    socket.on("chat", (roomNo, msg, callback) => {
+        socket.to(roomNo).emit("chat", msg);
+        callback();
+    });
+
+});
 
 /* 
 const wss = new WebSocket.Server({ server });

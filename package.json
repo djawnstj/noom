@@ -18,5 +18,18 @@
     "pug": "^3.0.2",
     "socket.io": "^4.5.1",
     "ws": "^8.8.0"
-  }
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/djawnstj/noom.git"
+  },
+  "keywords": [
+    "noom"
+  ],
+  "author": "EJS",
+  "bugs": {
+    "url": "https://github.com/djawnstj/noom/issues"
+  },
+  "homepage": "https://github.com/djawnstj/noom#readme"
 }
