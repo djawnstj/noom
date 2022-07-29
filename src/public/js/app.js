@@ -44,7 +44,7 @@ nickForm.addEventListener("submit", (event) => {
     nickInput.value = "";
 }) */
 
-const socket = io(); 
+const socket = io();
 
 const enterRoom = document.querySelector("#enterRoom");
 const enterForm = enterRoom.querySelector("#enterForm");
@@ -97,3 +97,5 @@ socket.on("chat", (name, msg) => createChat(`${name}: ${msg}`));
 socket.on("join", (name) => createChat(`${name} Joined!`));
 
 socket.on("quit", (name) => createChat(`${name} left.`));
+
+socket.on("room_change", msg => console.log(msg));
