@@ -73,7 +73,7 @@ const showRoom = () => {
 enterForm.addEventListener("submit", event => {
     event.preventDefault();
     roomNo = roomInput.value;
-    socket.emit("room", roomNo, nameInput.value, showRoom);
+    socket.emit("enter_chat", roomNo, nameInput.value, showRoom);
     roomTitle.innerText = `Room ${roomNo}`;
     roomInput.value = "";
 });
