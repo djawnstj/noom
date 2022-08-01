@@ -57,9 +57,17 @@ io.on("connection", socket => {
 
     socket.on("enter_video", (roomId) => {
         socket.join(roomId);
-        
+        socket.to(roomId).emit("join_video");
     });
 
+    socket.on("webRTC_offer", (offer, roomId) => {
+        socket.to(roomId).emit("webRTC_offer", offer);
+    }); 
+
+    socket.on("webRTC_answer", (answer, roomId) => {
+        socket.to(roomId).emit("webRTC_answer", answer);
+    }); 
+    
     socket.on("disconnecting", () => {
         socket.rooms.forEach(room => socket.to(room).emit("quit", socket.name));
     });
