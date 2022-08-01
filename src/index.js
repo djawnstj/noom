@@ -67,6 +67,10 @@ io.on("connection", socket => {
     socket.on("webRTC_answer", (answer, roomId) => {
         socket.to(roomId).emit("webRTC_answer", answer);
     }); 
+
+    socket.on("webRTC_ice", (ice, roomId) => {
+        socket.to(roomId).emit("webRTC_ice", ice);
+    });
     
     socket.on("disconnecting", () => {
         socket.rooms.forEach(room => socket.to(room).emit("quit", socket.name));

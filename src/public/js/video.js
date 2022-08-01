@@ -28,6 +28,8 @@ const localCam = localContainer.querySelector("#localCam");
 const localCams = localContainer.querySelector("#localCams")
 
 const localStream = new MediaStream();
+let peerStream;
+
 let camId;
 let roomId;
 /** @type {RTCPeerConnection} */
@@ -84,6 +86,22 @@ const initMedia = async () => {
 
 const makeConnection = () => {
     myPeerConnection = new RTCPeerConnection();
+
+    myPeerConnection.addEventListener("icecandidate", (data) => {
+        socket.emit("webRTC_ice", data.candidate, roomId); 
+    }); 
+
+    myPeerConnection.addEventListener("addstream", async (data) => {
+        peerStream = new MediaStream(data.stream);
+
+        const peerContainer = videoContainer.querySelector("#peerContainer");
+        const peerVideo = videoContainer.querySelector("#peerVideo");
+        const peerMute = peerContainer.querySelector("#peerMute");
+        const peerCam = peerContainer.querySelector("#peerCam");
+
+         peerVideo.srcObject = peerStream.media;
+    });
+
     localStream.media.getTracks().forEach(track => myPeerConnection.addTrack(track, localStream.media));
 }
 
@@ -129,6 +147,11 @@ localCam.addEventListener("click", () => {
 
 localCams.addEventListener("input", async () => {
     await setMedia(localCams.value);
+    if (myPeerConnection) {
+        const videoTrack = localStream.media.getVideoTracks()[0];
+        const videoSender = myPeerConnection.getSenders().find(sender => sender.track.kind === "video");
+        videoSender.replaceTrack(videoTrack);
+    }
 });
 
 enterRoomForm.addEventListener("submit", async (event) => {
@@ -153,7 +176,11 @@ socket.on("webRTC_offer", async (offer) => {
     socket.emit("webRTC_answer", answer, roomId);
 });
 
-socket.on("webRTC_answer", async (answer) => {
+socket.on("webRTC_answer", (answer) => {
     myPeerConnection.setRemoteDescription(answer);
+});
+
+socket.on("webRTC_ice", (ice) => {
+    myPeerConnection.addIceCandidate(ice);
 });
 

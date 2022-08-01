@@ -20,5 +20,9 @@ html(lang="en")
                     button#localMute mute
                     button#localCam turn camera off
                     select#localCams
+                div#peerContainer
+                    video#peerVideo(autoplay, playsinline, width="400", height="400")
+                    button#peerMute mute
+                    button#peerCam turn camera off
         script(src="/socket.io/socket.io.js") 
         script(src="/public/js/video.js")  
