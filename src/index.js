@@ -43,7 +43,7 @@ const findPublicRoom = () => {
 const countPerson = (roomName) => (io.sockets.adapter.room.get(roomName)?.size)
 
 io.on("connection", socket => {
-    socket.nicknameName = "anonymous"
+    socket.name = "anonymous";
 
     socket.onAny(event => console.log(`Socket Event: ${event}`));
 
@@ -53,6 +53,11 @@ io.on("connection", socket => {
         callback();
         socket.to(roomNo).emit("join", socket.name);
         io.sockets.emit("room_change", findPublicRoom());
+    });
+
+    socket.on("enter_video", (roomId) => {
+        socket.join(roomId);
+        
     });
 
     socket.on("disconnecting", () => {

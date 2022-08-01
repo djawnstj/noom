@@ -10,9 +10,15 @@ html(lang="en")
         header
             h1 Noom
         main
-            div#localContainer
-                video#localVideo(autoplay, playsinline, width="400", height="400")
-                button#localMute mute
-                button#localCam camera off
+            div#enterRoomContainer
+                form#enterRoomForm
+                    input#enterRoomInput(placeholder="room id", required, type="text")
+                    button Enter Room
+            div#videoContainer(hidden)
+                div#localContainer
+                    video#localVideo(autoplay, playsinline, width="400", height="400")
+                    button#localMute mute
+                    button#localCam turn camera off
+                    select#localCams
         script(src="/socket.io/socket.io.js") 
-        script(src = "/public/js/video.js")  
+        script(src="/public/js/video.js")  
