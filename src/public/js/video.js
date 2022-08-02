@@ -25,29 +25,31 @@ const localContainer = videoContainer.querySelector("#localContainer");
 const localVideo = localContainer.querySelector("#localVideo");
 const localMute = localContainer.querySelector("#localMute");
 const localCam = localContainer.querySelector("#localCam");
-const localCams = localContainer.querySelector("#localCams")
+const localCamSelector = localContainer.querySelector("#localCamSelector")
 
 const localStream = new MediaStream();
 let peerStream;
 
+let localCams;
 let camId;
 let roomId;
 /** @type {RTCPeerConnection} */
 let myPeerConnection;
+let myDataChannel;
 
 const getCameras = async () => {
+    
     try {
-        navigator.mediaDevices.getUserMedia({audio: true, video: true})
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cameras = devices.filter(device => device.kind === "videoinput")
-
+        localCams = cameras;
         camId = cameras[0].deviceId;
         cameras.forEach(cam => {
             const option = document.createElement("option");
             option.value = cam.deviceId;
             option.innerText = cam.label;
             if (cameras[0].deviceId === cam.deviceId) option.selected = true;
-            localCams.appendChild(option);
+            localCamSelector.appendChild(option);
         });
 
     } catch (e) {
@@ -56,6 +58,12 @@ const getCameras = async () => {
 }
 
 const setMedia = async (camId) => {
+
+    const initialConstrains = {
+      audio: true,
+      video: { facingMode: "user" },
+    };
+
     const constrains = {
         audio: true,
         video: {
@@ -66,12 +74,21 @@ const setMedia = async (camId) => {
         }
     }
     try {
-        await localStream.setMedia(await navigator.mediaDevices.getUserMedia(constrains));
+
+        if (!localCams) await getCameras();
+
+        await localStream.setMedia(await navigator.mediaDevices.getUserMedia(
+            camId ? constrains : initialConstrains
+        ));
 
         localVideo.srcObject = localStream.media;
 
     } catch (e) {
         console.log(`error in setMedia(): ${e.message}`);
+        setTimeout(async () => { 
+            await setMedia(camId) 
+        }, 3000);
+       
     }
 }
 
@@ -80,12 +97,27 @@ const initMedia = async () => {
     enterRoomContainer.hidden = true;
     videoContainer.hidden = false;
 
-    await setMedia(camId)
+    await setMedia()
     makeConnection();
 }
 
 const makeConnection = () => {
-    myPeerConnection = new RTCPeerConnection();
+    myPeerConnection = new RTCPeerConnection({
+        iceServers: [{
+            urls: [ "stun:ntk-turn-2.xirsys.com" ]
+         }, {
+            username: "5XaP9X1iEu6VzUGVKH3Uvjbu4dA3JcIQxbGmwbFE_XNnhzGN7GtFahzCpWLAQlfbAAAAAGLoWXdkamF3bnN0ag==",
+            credential: "cb21dc30-11ec-11ed-bade-0242ac120004",
+            urls: [
+                "turn:ntk-turn-2.xirsys.com:80?transport=udp",
+                "turn:ntk-turn-2.xirsys.com:3478?transport=udp",
+                "turn:ntk-turn-2.xirsys.com:80?transport=tcp",
+                "turn:ntk-turn-2.xirsys.com:3478?transport=tcp",
+                "turns:ntk-turn-2.xirsys.com:443?transport=tcp",
+                "turns:ntk-turn-2.xirsys.com:5349?transport=tcp"
+            ]
+         }]
+    });
 
     myPeerConnection.addEventListener("icecandidate", (data) => {
         socket.emit("webRTC_ice", data.candidate, roomId); 
@@ -94,6 +126,7 @@ const makeConnection = () => {
     myPeerConnection.addEventListener("addstream", async (data) => {
         peerStream = new MediaStream(data.stream);
 
+        // TODO
         const peerContainer = videoContainer.querySelector("#peerContainer");
         const peerVideo = videoContainer.querySelector("#peerVideo");
         const peerMute = peerContainer.querySelector("#peerMute");
@@ -102,10 +135,18 @@ const makeConnection = () => {
          peerVideo.srcObject = peerStream.media;
     });
 
-    localStream.media.getTracks().forEach(track => myPeerConnection.addTrack(track, localStream.media));
-}
+    myPeerConnection.addEventListener("track", (data) => {
 
-getCameras()
+        const peerContainer = videoContainer.querySelector("#peerContainer");
+        const peerVideo = videoContainer.querySelector("#peerVideo");
+        const peerMute = peerContainer.querySelector("#peerMute");
+        const peerCam = peerContainer.querySelector("#peerCam");
+
+        peerVideo.srcObject = data.streams[0]
+    });
+
+    localStream.media?.getTracks().forEach(track => myPeerConnection.addTrack(track, localStream.media));
+}
 
 localMute.addEventListener("click", () => {
     if (!localStream) return;
@@ -145,8 +186,8 @@ localCam.addEventListener("click", () => {
     }
 });
 
-localCams.addEventListener("input", async () => {
-    await setMedia(localCams.value);
+localCamSelector.addEventListener("input", async () => {
+    await setMedia(localCamSelector.value);
     if (myPeerConnection) {
         const videoTrack = localStream.media.getVideoTracks()[0];
         const videoSender = myPeerConnection.getSenders().find(sender => sender.track.kind === "video");
@@ -157,19 +198,27 @@ localCams.addEventListener("input", async () => {
 enterRoomForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    roomId = enterRoomForm.querySelector("#enterRoomInput").value;
     await initMedia();
+
+    roomId = enterRoomForm.querySelector("#enterRoomInput").value;
 
     await socket.emit("enter_video", roomId);
 });
 
 socket.on("join_video", async () => {
+    myDataChannel = myPeerConnection.createDataChannel("chat");
+    myDataChannel.addEventListener("message", console.log);
     const offer = await myPeerConnection.createOffer();
     myPeerConnection.setLocalDescription(offer);
     socket.emit("webRTC_offer", offer, roomId);
 });
 
 socket.on("webRTC_offer", async (offer) => {
+    myPeerConnection.addEventListener("datachannel", (event) => {
+        myDataChannel = event.channel;
+        myDataChannel.addEventListener("message", console.log);
+    });
+
     myPeerConnection.setRemoteDescription(offer);
     const answer = await myPeerConnection.createAnswer();
     myPeerConnection.setLocalDescription(answer);

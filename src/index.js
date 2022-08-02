@@ -11,7 +11,8 @@ app.use("/public", express.static(__dirname + "/public"));
 
 app.get("/chat", (req, res) => res.render("chat"));
 app.get("/video", (req, res) => res.render("video"));
-app.get("/", (req, res) => res.redirect("/video"));
+app.get("/screen", (req, res) => res.render("screen"));
+app.get("/", (req, res) => res.redirect("/screen"));
 // app.get("/test", (req, res) => res.sendFile(__dirname + "/public/js/sample.xml"));
 
 const handleListen = () => console.log(`Listening on http://localhost:3000`);

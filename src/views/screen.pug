@@ -10,19 +10,14 @@ html(lang="en")
         header
             h1 Noom
         main
-            div#enterRoomContainer
+            div#enterRoomContainer(hidden)
                 form#enterRoomForm
                     input#enterRoomInput(placeholder="room id", required, type="text")
                     button Enter Room
-            div#videoContainer(hidden)
+            div#videoContainer
                 div#localContainer
-                    video#localVideo(autoplay, playsinline, width="400", height="400")
-                    button#localMute mute
-                    button#localCam turn camera off
-                    select#localCamSelector
-                div#peerContainer
-                    video#peerVideo(autoplay, playsinline, width="400", height="400")
-                    button#peerMute mute
-                    button#peerCam turn camera off
+                    video#localVideo(autoplay, playsinline, width="1280", height="720")
+                    button#startCaptureBtn start
+                    button#stopCaptureBtn end
         script(src="/socket.io/socket.io.js") 
-        script(src="/public/js/video.js")  
+        script(src="/public/js/screen.js")  
